@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Обучение - RefereeQuest</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .navbar {
+      background-color: #00a0e3;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center; /* Центрируем содержимое */
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+      box-sizing: border-box;
+    }
+    .navbar img {
+      height: 50px;
+      position: absolute; /* Позиционируем логотип слева */
+      left: 10px;
+    }
+    .navbar h1 {
+      color: white;
+      margin: 0;
+      font-size: 24px;
+      text-align: center; /* Центрируем текст */
+    }
+    .task-buttons-container {
+      margin: 70px 0 0 0;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .task-buttons {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      max-width: 800px;
+    }
+    .task-buttons button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      margin: 5px;
+      cursor: pointer;
+      color: white; /* Добавляем белый цвет текста */
+    }
+    .task-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .task-video {
+      width: 640px;
+      height: 360px;
+      background-color: #aaa;
+      margin: 20px auto;
+      display: none; /* Скрываем по умолчанию */
+    }
+    .task-text {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .task-answers {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .task-answers button {
+      width: 200px;
+      height: auto;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 10px;
+      border: 1px solid #aaa;
+      background-color: #ccc;
+      white-space: normal; /* Позволяем переносы строк */
+      text-align: center; /* Центрируем текст */
+      padding: 10px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<div class="navbar">
+  <img src="/logo.png" alt="logo">
+  <h1>RefereeQuest</h1>
+</div>
+
+<div class="task-buttons-container" id="task-buttons-container">
+  <!-- Кнопки заданий будут добавлены динамически -->
+</div>
+
+<div class="task-container">
+  <div class="task-video" id="task-video">
+    <!-- Видео будет добавлено динамически -->
+  </div>
+  <div class="task-text" id="task-text"></div>
+  <div class="task-answers" id="task-answers">
+    <!-- Ответы будут добавлены динамически -->
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    fetch('/training')
+            .then(response => response.json())
+            .then(data => {
+              const taskButtonsContainer = document.getElementById('task-buttons-container');
+              const taskVideo = document.getElementById('task-video');
+              const taskText = document.getElementById('task-text');
+              const taskAnswers = document.getElementById('task-answers');
+
+              const tasks = data.tasks;
+
+              function loadTask(taskId) {
+                const task = tasks[taskId];
+                taskText.textContent = task.description;
+                if (task.video_url) {
+                  taskVideo.style.display = 'block'; // Показываем видео
+                  taskVideo.innerHTML = `<video width="640" height="360" controls><source src="${task.video_url}" type="video/mp4"></video>`;
+                } else {
+                  taskVideo.style.display = 'none'; // Скрываем видео, если его нет
+                  taskVideo.innerHTML = '';
+                }
+                fetch(`/task-answers?task_id=${taskId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                          taskAnswers.innerHTML = '';
+                          data.answers.forEach(answer => {
+                            const answerButton = document.createElement('button');
+                            answerButton.textContent = answer.answer_text;
+                            answerButton.onclick = () => submitAnswer(taskId, answer.id);
+                            taskAnswers.appendChild(answerButton);
+                          });
+                        });
+              }
+
+              function submitAnswer(taskId, answerId) {
+                fetch('/check-answer', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  },
+                  body: `task_id=${taskId}&answer_id=${answerId}`
+                })
+                        .then(response => response.json())
+                        .then(data => {
+                          if (data.success) {
+                            alert('Ответ принят. Задание выполнено.');
+                            loadUserProgress();
+                          } else {
+                            alert('Ответ неверный.');
+                          }
+                        });
+              }
+
+              function loadUserProgress() {
+                fetch('/user-progress')
+                        .then(response => response.json())
+                        .then(data => {
+                          const userTasks = data.userTasks;
+                          taskButtonsContainer.innerHTML = '';
+
+                          let firstUncompletedTaskId = 1;
+
+                          for (let i = 1; i <= 40; i++) {
+                            const button = document.createElement('button');
+                            button.textContent = i;
+                            if (userTasks[i] === 1) {
+                              button.style.backgroundColor = 'green';
+                              button.disabled = true;
+                            } else if (firstUncompletedTaskId === 1) {
+                              firstUncompletedTaskId = i;
+                              button.style.backgroundColor = 'red';
+                              button.addEventListener('click', () => loadTask(i));
+                            } else {
+                              button.style.backgroundColor = 'grey';
+                              button.disabled = true;
+                            }
+                            if ((i - 1) % 10 === 0) {
+                              const rowDiv = document.createElement('div');
+                              rowDiv.className = 'task-buttons';
+                              taskButtonsContainer.appendChild(rowDiv);
+                            }
+                            taskButtonsContainer.lastChild.appendChild(button);
+                          }
+
+                          // Установим currentTaskId как первое незавершенное задание
+                          loadTask(firstUncompletedTaskId);
+                        });
+              }
+
+              loadUserProgress();
+            });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Магазин - RefereeQuest</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            background-color: #00a0e3;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+        .navbar img {
+            height: 50px;
+        }
+        .navbar h1 {
+            color: white;
+            margin: 0;
+            font-size: 24px;
+        }
+        .navbar .user-coins {
+            color: white;
+        }
+        .store-container {
+            margin: 70px auto;
+            max-width: 1000px;
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .item {
+            width: 200px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            margin: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .item img {
+            width: 100%;
+            height: auto;
+        }
+        .item h3 {
+            min-height: 50px;
+        }
+        .item button {
+            background-color: green;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 5px;
+            min-height: 40px;
+        }
+        .message {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <img src="/logo.png" alt="logo">
+    <h1>Магазин</h1>
+    <div class="user-coins" id="user-coins"></div>
+</div>
+
+<div class="store-container" id="store-container">
+
+</div>
+
+<div class="message" id="message"></div>
+
+<script>
+    const items = [
+        {name: "Книга правил", cost: 200, image: "/photo-store/Книга правил.jpg"},
+        {name: "Брелок", cost: 300, image: "/photo-store/Брелок.jpeg"},
+        {name: "Комплект судейских карточек", cost: 350, image: "/photo-store/Комплект судейских карточек.png"},
+        {name: "Судейская пена", cost: 500, image: "/photo-store/Судейская пена.jpg"},
+        {name: "Свисток", cost: 650, image: "/photo-store/Свисток.jpg"},
+        {name: "Судейские флаги", cost: 800, image: "/photo-store/Судейские флаги.jpg"},
+        {name: "Судейская форма", cost: 1000, image: "/photo-store/Судейская форма.png"},
+    ];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const storeContainer = document.getElementById('store-container');
+        const userCoinsElement = document.getElementById('user-coins');
+        const messageElement = document.getElementById('message');
+
+        // Загрузка количества монет пользователя
+        fetch('/user-coins')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    userCoinsElement.textContent = `Монеты: ${data.coins}`;
+                } else {
+                    userCoinsElement.textContent = data.message;
+                }
+            });
+
+        // Отображение товаров
+        items.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'item';
+            itemDiv.innerHTML = `
+                <img src="${item.image}" alt="${item.name}">
+                <h3>${item.name}</h3>
+                <p>Стоимость: ${item.cost}</p>
+                <button onclick="buyItem('${item.name}', ${item.cost})">Купить</button>
+            `;
+            storeContainer.appendChild(itemDiv);
+        });
+
+        // Покупка товара
+        window.buyItem = function(name, cost) {
+            fetch('/buy-item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `item_name=${name}&item_cost=${cost}`
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        messageElement.textContent = 'Покупка успешна';
+                        // Обновить количество монет
+                        fetch('/user-coins')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    document.getElementById('user-coins').textContent = `Монеты: ${data.coins}`;
+                                }
+                            });
+                    } else {
+                        messageElement.textContent = data.message;
+                    }
+                });
+        }
+    });
+</script>
+</body>
+</html>

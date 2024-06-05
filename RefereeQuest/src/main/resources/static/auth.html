@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход и Регистрация</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .form-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 300px;
+            margin-bottom: 20px;
+        }
+        .form-container h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .form-container input {
+            display: block;
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-container button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-container .link {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .form-container .link a {
+            color: #5cb85c;
+            text-decoration: none;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="form-wrapper">
+    <div class="form-container" id="login-form">
+        <h1>Вход</h1>
+        <form id="loginForm">
+            <input type="text" name="username" placeholder="Имя пользователя" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+            <button type="submit">Вход</button>
+        </form>
+        <div class="link">
+            <a href="#" onclick="showRegisterForm()">Нет аккаунта? Зарегистрируйся!</a>
+        </div>
+    </div>
+
+    <div class="form-container hidden" id="register-form">
+        <h1>Регистрация</h1>
+        <form id="registerForm">
+            <input type="text" name="username" placeholder="Имя пользователя" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+            <button type="submit">Регистрация</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        fetch('/login', {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Вход успешен');
+                    window.location.href = '/index.html';
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            })
+            .catch(error => alert('Ошибка сервера: ' + error.message));
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        fetch('/register', {
+            method: 'POST',
+            body: new URLSearchParams(formData)
+        }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Регистрация успешна');
+                    window.location.href = '/index.html';
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            })
+            .catch(error => alert('Ошибка сервера: ' + error.message));
+    });
+
+    function showRegisterForm() {
+        document.getElementById('register-form').classList.remove('hidden');
+    }
+</script>
+</body>
+</html>

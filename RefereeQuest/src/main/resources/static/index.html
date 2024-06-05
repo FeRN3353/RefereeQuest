@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RefereeQuest</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .navbar {
+            background-color: #00a0e3;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+        .navbar img {
+            height: 50px;
+        }
+        .navbar h1 {
+            color: white;
+            margin: 0;
+            font-size: 24px;
+        }
+        .navbar .auth-buttons, .navbar .logout-button {
+            display: flex;
+            align-items: center;
+        }
+        .navbar button {
+            padding: 10px 20px;
+            background-color: #5cb85c;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            margin-right: 20px;
+            cursor: pointer;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #d3d3d3;
+            padding: 20px;
+            position: fixed;
+            top: 70px;
+            height: calc(100vh - 70px);
+        }
+        .sidebar a {
+            display: block;
+            padding: 10px 0;
+            color: black;
+            text-decoration: none;
+        }
+        .content {
+            margin-left: 220px;
+            padding: 40px;
+            margin-top: 70px;
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <img src="/logo.png" alt="logo">
+    <h1>RefereeQuest</h1>
+    <div class="auth-buttons" id="auth-buttons">
+        <button onclick="location.href='/auth.html'">Вход/Регистрация</button>
+    </div>
+    <div class="logout-button" id="logout-button" style="display:none;">
+        <button id="logout-btn" onclick="logout()"></button>
+    </div>
+</div>
+<div class="sidebar">
+    <a id="training-link" href="training.html">Начать обучение</a>
+    <a id="store-link" href="store.html">Магазин</a>
+    <a href="https://t.me/coach_zaga">Телеграмм канал</a>
+</div>
+<div class="content">
+    <h1>Приветствуем вас на платформе обучения и мотивации футбольных арбитров RefereeQuest!</h1>
+    <p>Мы рады представить вам инновационный веб-интерфейс, созданный специально для футбольных арбитров, стремящихся к
+        профессиональному росту и совершенствованию своих навыков. Здесь вы найдете всё необходимое для того, чтобы
+        стать лучшим в своем деле и получить удовольствие от работы на поле.</p>
+    <h2>Что мы предлагаем?</h2>
+    <p><b>- Тесты и задания: </b>Проверяйте свои знания и навыки с помощью тестов  - текстовых и видеовопросов.
+        Получайте мгновенную обратную связь и улучшайте свои результаты.</p>
+    <p><b>- Мотивационные программы: </b>Получайте поддержку и вдохновение от успешных арбитров, участвующих в нашей
+        платформе. Следите за своими достижениями и ставьте новые цели для профессионального роста.</p>
+    <p><b>- Форумы и сообщества:</b>Общайтесь с коллегами, делитесь опытом и задавайте вопросы в нашем телеграмм-канале!
+        Наше сообщество арбитров всегда готово помочь и поддержать.</p>
+    <h2>Присоединяйтесь к нам!</h2>
+    <p>Станьте частью сообщества профессиональных арбитров, которые стремятся к совершенству. Зарегистрируйтесь на нашей
+        платформе уже сегодня и начните свой путь к успеху. Ваша карьера и ваши достижения в ваших руках!</p>
+    <p>Начните прямо сейчас и почувствуйте разницу!</p>
+    <p>Добро пожаловать на наш веб-интерфейс для обучения и мотивации футбольных арбитров – ваш надежный партнер в мире
+        футбола!</p>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch('/login-status', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                const authButtons = document.getElementById('auth-buttons');
+                const logoutButton = document.getElementById('logout-button');
+                const logoutBtn = document.getElementById('logout-btn');
+                const trainingLink = document.getElementById('training-link');
+                const storeLink = document.getElementById('store-link');
+
+                if (data.success) {
+                    authButtons.style.display = 'none';
+                    logoutButton.style.display = 'flex';
+                    logoutBtn.textContent = `${data.username} (Выйти)`;
+
+                    trainingLink.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        window.location.href = 'training.html';
+                    });
+
+                    storeLink.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        window.location.href = 'store.html';
+                    });
+                } else {
+                    authButtons.style.display = 'flex';
+                    logoutButton.style.display = 'none';
+
+                    trainingLink.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        alert('Пожалуйста, войдите в аккаунт для доступа к обучению.');
+                    });
+
+                    storeLink.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        alert('Пожалуйста, войдите в аккаунт для доступа к магазину.');
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    function logout() {
+        fetch('/logout', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/index.html';
+                } else {
+                    alert('Ошибка при выходе.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
+</body>
+</html>
